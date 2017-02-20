@@ -54,6 +54,7 @@ INCLUDES += -I ../cjson
 INCLUDES += -I ../dhtlib
 INCLUDES += -I ../fatfs
 INCLUDES += -I ../http
+INCLUDES += -I ../sqlite3
 INCLUDES += -I ../websocket
 PDIR := ../$(PDIR)
 sinclude $(PDIR)Makefile

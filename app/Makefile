@@ -46,6 +46,7 @@ SUBDIRS= 					\
 	http					\
 	fatfs					\
 	esp-gdbstub				\
+	sqlite3					\
 	websocket
 
 endif # } PDIR
@@ -92,6 +93,7 @@ COMPONENTS_eagle.app.v6 = 			\
 	dhtlib/libdhtlib.a 			\
 	tsl2561/tsl2561lib.a			\
 	http/libhttp.a				\
+	sqlite3/libsqlite3.a			\
 	websocket/libwebsocket.a		\
 	esp-gdbstub/libgdbstub.a		\
 	net/libnodemcu_net.a			\
