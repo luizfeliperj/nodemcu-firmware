@@ -72,9 +72,42 @@ static malloc_zone_t* _sqliteZone_;
 ** Use standard C library malloc and free on non-Apple systems.  
 ** Also used by Apple systems if SQLITE_WITHOUT_ZONEMALLOC is defined.
 */
-#define SQLITE_MALLOC(x)             os_malloc(x)
-#define SQLITE_FREE(x)               os_free(x)
-#define SQLITE_REALLOC(x,y)          os_realloc((x),(y))
+
+#include <c_stdio.h>
+#include "user_interface.h"
+
+void *my__malloc(size_t __size){
+ size_t in = system_get_free_heap_size();
+ if(__size>system_get_free_heap_size()){
+     dbg_printf ("malloc: ERROR!!! not enough memory %u > %u\n", __size, system_get_free_heap_size());
+     return NULL;
+ }
+ void *x = (void *)os_malloc(__size);
+ dbg_printf ("malloc: in %u, out %u\n", in, system_get_free_heap_size());
+ return x;
+}
+
+void *my__realloc(void *x, size_t __size){
+ size_t in = system_get_free_heap_size();
+ if(__size>system_get_free_heap_size()){
+     dbg_printf ("realloc: ERROR!!! not enough memory %u > %u\n", __size, system_get_free_heap_size());
+     return NULL;
+ }
+ x = (void *)os_realloc(x, __size);
+ dbg_printf ("realloc: in %u, out %u\n", in, system_get_free_heap_size());
+ return x;
+}
+
+void my__free(void *x){
+ size_t in = system_get_free_heap_size();
+ os_free(x);
+ dbg_printf ("free: in %u, out %u\n", in, system_get_free_heap_size());
+ return;
+}
+
+#define SQLITE_MALLOC(x)             my__malloc(x)
+#define SQLITE_FREE(x)               my__free(x)
+#define SQLITE_REALLOC(x,y)          my__realloc((x),(y))
 
 /*
 ** The malloc.h header file is needed for malloc_usable_size() function

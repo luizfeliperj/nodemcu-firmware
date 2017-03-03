@@ -25,6 +25,7 @@
 * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE     *
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                *
 ************************************************************************/
+#define LSQLITE_VERSION "0.9.4"
 
 #include <c_stdlib.h>
 #include <c_string.h>
@@ -750,7 +751,7 @@ static int cleanupdb(lua_State *L, sdb *db) {
 
 static sdb *lsqlite_getdb(lua_State *L, int index) {
     sdb *db = (sdb*)luaL_checkudata(L, index, sqlite_meta);
-    if (db == NULL) luaL_typerror(L, index, "sqlite database");
+    if (db == NULL) luaL_typerror(L, index, "invalid sqlite database");
     return db;
 }
 
@@ -2101,7 +2102,7 @@ static int lsqlite_version(lua_State *L) {
     return 1;
 }
 
-#if 0
+#if 1
 static int lsqlite_complete(lua_State *L) {
     const char *sql = luaL_checkstring(L, 1);
     lua_pushboolean(L, sqlite3_complete(sql));
@@ -2190,12 +2191,6 @@ static int lsqlite_open_ptr(lua_State *L) {
     return 1;
 }
 
-static int lsqlite_newindex(lua_State *L) {
-    lua_pushliteral(L, "attempt to change readonly table");
-    lua_error(L);
-    return 0;
-}
-
 #ifndef LSQLITE_VERSION
 /* should be defined in rockspec, but just in case... */
 #define LSQLITE_VERSION "unknown"
@@ -2257,6 +2252,7 @@ static const LUA_REG_TYPE dblib[] = {
 
     { LSTRKEY( "__tostring" ),          LFUNCVAL ( db_tostring )             },
     { LSTRKEY( "__gc" ),                LFUNCVAL ( db_gc )                   },
+    { LSTRKEY( "__index" ),             LROVAL   ( dblib )                   },
 
     { LNILKEY, LNILVAL }
 };
@@ -2305,6 +2301,7 @@ static const LUA_REG_TYPE vmlib[] = {
 
     { LSTRKEY( "__tostring" ),          LFUNCVAL ( dbvm_tostring )           },
     { LSTRKEY( "__gc" ),                LFUNCVAL ( dbvm_gc )                 },
+    { LSTRKEY( "__index" ),             LROVAL   ( vmlib )                   },
 
     { LNILKEY, LNILVAL }
 };
@@ -2326,6 +2323,7 @@ static const LUA_REG_TYPE ctxlib[] = {
     { LSTRKEY( "result_error" ),            LFUNCVAL ( lcontext_result_error )           },
 
     { LSTRKEY( "__tostring" ),              LFUNCVAL ( lcontext_tostring )               },
+    { LSTRKEY( "__index" ),                 LROVAL   ( ctxlib )                          },
     { LNILKEY, LNILVAL }
 };
 
@@ -2338,6 +2336,7 @@ static const LUA_REG_TYPE dbbulib[] = {
 
 //  { LSTRKEY( "__tostring" ),  LFUNCVAL ( dbbu_tostring )   },
     { LSTRKEY( "__gc" ),        LFUNCVAL ( dbbu_gc )         },
+    { LSTRKEY( "__index" ),     LROVAL   ( dbbulib )         },
     { LNILKEY, LNILVAL }
 };
 
@@ -2356,8 +2355,6 @@ static const LUA_REG_TYPE sqlitelib[] = {
     { LSTRKEY( "open_ptr" ),        LFUNCVAL ( lsqlite_open_ptr )        },
 
     { LSTRKEY( "backup_init" ),     LFUNCVAL ( lsqlite_backup_init )     },
-
-    { LSTRKEY( "__newindex" ),      LFUNCVAL ( lsqlite_newindex )        },
 
     SC(OK)          SC(ERROR)       SC(INTERNAL)    SC(PERM)
     SC(ABORT)       SC(BUSY)        SC(LOCKED)      SC(NOMEM)
