@@ -75,6 +75,7 @@ static malloc_zone_t* _sqliteZone_;
 
 #ifdef ENABLE_LOCAL_MEMDEBUG
 #include <c_stdio.h>
+#include <c_stdlib.h>
 #include "user_interface.h"
 
 void *my__malloc(size_t __size){

@@ -8,15 +8,19 @@
 **/
 
 #include <c_stdio.h>
+#include <c_stdlib.h>
 #include <c_string.h>
 #include <c_types.h>
 #include <osapi.h>
 #include <vfs.h>
+#include <spi_flash.h>
 #include <time.h>
 #include <sqlite3.h>
 
-#undef dbg_printf
-#define dbg_printf(...) 0
+#define NUMPAGES 8
+
+// #undef dbg_printf
+// #define dbg_printf(...) 0
 #define ESP8266_DEFAULT_MAXNAMESIZE 32
 
 static int esp8266_Close(sqlite3_file*);
@@ -56,8 +60,9 @@ struct esp8266_file {
   struct {
     int fd;
 #ifdef MEMORY_JOURNAL
-    uint8_t *ptr;
+    uint8_t *journal;
 #endif
+    uint8_t *writecache;
   } data;
   char name[ESP8266_DEFAULT_MAXNAMESIZE];
 };
@@ -121,7 +126,7 @@ static int esp8266mem_Close(sqlite3_file *id)
 {
 	esp8266_file *file = (esp8266_file*) id;
 
-	sqlite3_free (file->data.ptr);
+	sqlite3_free (file->data.journal);
 
 	dbg_printf("esp8266mem_Close: %s OK\n", file->name);
 	return SQLITE_OK;
@@ -131,28 +136,19 @@ static int esp8266mem_Read(sqlite3_file *id, void *buffer, int amount, sqlite3_i
 {
 	sint32_t ofst;
 	esp8266_file *file = (esp8266_file*) id;
-	uint16_t *sz = (uint16_t*)file->data.ptr;
-	uint8_t *pBuf = file->data.ptr + sizeof(uint16_t);
+	uint16_t *sz = (uint16_t*)file->data.journal;
+	uint8_t *pBuf = file->data.journal + sizeof(uint16_t);
 
 	ofst = (sint32_t)(offset & 0x7FFFFFFF);
 
-	dbg_printf("esp8266mem_Read: 1r %s\n", file->name);
-	if (ofst > SQLITE_DEFAULT_JOURNAL_SIZE_LIMIT) {
-		dbg_printf("esp8266mem_Read: 2r %s FAIL\n", file->name);
-		return SQLITE_IOERR_READ;
-	}
-
-	if (ofst + amount > SQLITE_DEFAULT_JOURNAL_SIZE_LIMIT) {
-		int cpsz = amount - ( (ofst + amount) - SQLITE_DEFAULT_JOURNAL_SIZE_LIMIT );
-		memcpy (buffer, pBuf + ofst, cpsz);
-		dbg_printf("esp8266mem_Read: 3r %s PART OK\n", file->name);
-		return SQLITE_IOERR_SHORT_READ;
-	}
-
-	if (ofst > *sz) {
+	dbg_printf("esp8266mem_Read: 1r %s %ld %d\n", file->name, ofst, amount);
+	if (ofst + amount >= *sz) {
 		int cpsz = amount - ( (ofst + amount) - *sz );
-		memcpy (buffer, pBuf + ofst, cpsz);
-		dbg_printf("esp8266mem_Read: 4r %s PART OK\n", file->name);
+		if (cpsz > 0) {
+			dbg_printf("esp8266mem_Read: 2r %s %d CPSZ\n", file->name, cpsz);
+			memcpy (buffer, pBuf + ofst, cpsz);
+		}
+		dbg_printf("esp8266mem_Read: 3r %s PART [%d] [%ld] [%d] [%d] OK\n", file->name, cpsz, ofst, amount, *sz);
 		return SQLITE_IOERR_SHORT_READ;
 	}
 
@@ -166,23 +162,24 @@ static int esp8266mem_Write(sqlite3_file *id, const void *buffer, int amount, sq
 {
 	sint32_t ofst;
 	esp8266_file *file = (esp8266_file*) id;
-	uint16_t *sz = (uint16_t*)file->data.ptr;
-	uint8_t *pBuf = file->data.ptr + sizeof(uint16_t);
+	uint16_t *sz = (uint16_t*)file->data.journal;
 
 	ofst = (sint32_t)(offset & 0x7FFFFFFF);
-
-	if (ofst > SQLITE_DEFAULT_JOURNAL_SIZE_LIMIT) {
-		dbg_printf("esp8266mem_Write: 1w %s FAIL\n", file->name);
-		return SQLITE_IOERR_WRITE;
-	}
-
-	if (ofst + amount > SQLITE_DEFAULT_JOURNAL_SIZE_LIMIT) {
-		dbg_printf("esp8266mem_Write: 2w %s [%ld] [%d] FAIL\n", file->name, ofst, amount);
-		return SQLITE_IOERR_WRITE;
+	if (ofst + amount > NUMPAGES*SQLITE_DEFAULT_PAGE_SIZE && ofst + amount >= *sz) {
+		void *ptr = sqlite3_realloc(file->data.journal, ofst + amount + sizeof(uint16_t));
+		if (ptr == NULL) {
+			dbg_printf("esp8266mem_Write: 1w %s [%ld] [%d] FAIL\n", file->name, ofst, amount);
+			return SQLITE_IOERR_WRITE;
+		}
+		else {
+			sz = (uint16_t*)ptr;
+			file->data.journal = ptr;
+			dbg_printf("esp8266mem_Write: 2w %s [%ld] [%d] REALLOC\n", file->name, ofst, amount);
+		}
 	}
 
 	*sz = ofst + amount;
-	memcpy (pBuf + ofst, buffer, amount);
+	memcpy (file->data.journal + sizeof(uint16_t) + ofst, buffer, amount);
 
 	dbg_printf("esp8266mem_Write: %s [%ld] [%d] OK\n", file->name, ofst, amount);
 	return SQLITE_OK;
@@ -198,7 +195,7 @@ static int esp8266mem_Sync(sqlite3_file *id, int flags)
 static int esp8266mem_FileSize(sqlite3_file *id, sqlite3_int64 *size)
 {
 	esp8266_file *file = (esp8266_file*) id;
-	uint16_t *sz = (uint16_t*)file->data.ptr;
+	uint16_t *sz = (uint16_t*)file->data.journal;
 
 	*size = 0LL | *sz;
 	dbg_printf("esp8266mem_FileSize: %s [%d] OK\n", file->name, *sz);
@@ -234,12 +231,12 @@ static int esp8266_Open( sqlite3_vfs * vfs, const char * path, sqlite3_file * fi
 #ifdef MEMORY_JOURNAL
 	if( flags&SQLITE_OPEN_MAIN_JOURNAL ) {
 		p->base.pMethods = &esp8266MemMethods;
-		p->data.ptr = sqlite3_malloc(SQLITE_DEFAULT_JOURNAL_SIZE_LIMIT + sizeof(uint16_t));
-		if (! p->data.ptr )
+		p->data.journal = sqlite3_malloc(NUMPAGES*SQLITE_DEFAULT_PAGE_SIZE + sizeof(uint16_t));
+		if (! p->data.journal )
 			return SQLITE_NOMEM;
 
 		p->data.fd = 0;
-		memset (p->data.ptr, 0, SQLITE_DEFAULT_JOURNAL_SIZE_LIMIT + sizeof(uint16_t));
+		memset (p->data.journal, 0, NUMPAGES*SQLITE_DEFAULT_PAGE_SIZE + sizeof(uint16_t));
 		dbg_printf("esp8266_Open: 2o %s %d MEM OK\n", p->name, p->data.fd);
 		return SQLITE_OK;
 	}
@@ -412,7 +409,7 @@ static int esp8266_SectorSize(sqlite3_file *id)
 	esp8266_file *file = (esp8266_file*) id;
 
 	dbg_printf("esp8266_SectorSize:\n");
-	return SQLITE_DEFAULT_SECTOR_SIZE;
+	return 0;
 }
 
 static int esp8266_DeviceCharacteristics(sqlite3_file *id)
