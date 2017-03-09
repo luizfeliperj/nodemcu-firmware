@@ -2102,13 +2102,12 @@ static int lsqlite_version(lua_State *L) {
     return 1;
 }
 
-#if 1
 static int lsqlite_complete(lua_State *L) {
     const char *sql = luaL_checkstring(L, 1);
     lua_pushboolean(L, sqlite3_complete(sql));
     return 1;
 }
-#else
+#if 0
 static int lsqlite_complete(lua_State *L) {
     lua_pushliteral(L, "sql complete support disabled at compile time");
     lua_error(L);

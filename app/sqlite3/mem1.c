@@ -76,34 +76,35 @@ static malloc_zone_t* _sqliteZone_;
 #ifdef ENABLE_LOCAL_MEMDEBUG
 #include <c_stdio.h>
 #include <c_stdlib.h>
+#include "osapi.h"
 #include "user_interface.h"
 
 void *my__malloc(size_t __size){
  size_t in = system_get_free_heap_size();
  if(__size>system_get_free_heap_size()){
-     dbg_printf ("malloc: ERROR!!! not enough memory %u > %u\n", __size, system_get_free_heap_size());
+     dbg_printf ("malloc: ERROR!!! not enough memory %u > %lu\n", __size, system_get_free_heap_size());
      return NULL;
  }
  void *x = (void *)os_malloc(__size);
- dbg_printf ("malloc: in %u, out %u\n", in, system_get_free_heap_size());
+ dbg_printf ("malloc: in %u, out %lu\n", in, system_get_free_heap_size());
  return x;
 }
 
 void *my__realloc(void *x, size_t __size){
  size_t in = system_get_free_heap_size();
  if(__size>system_get_free_heap_size()){
-     dbg_printf ("realloc: ERROR!!! not enough memory %u > %u\n", __size, system_get_free_heap_size());
+     dbg_printf ("realloc: ERROR!!! not enough memory %u > %lu\n", __size, system_get_free_heap_size());
      return NULL;
  }
  x = (void *)os_realloc(x, __size);
- dbg_printf ("realloc: in %u, out %u\n", in, system_get_free_heap_size());
+ dbg_printf ("realloc: in %u, out %lu\n", in, system_get_free_heap_size());
  return x;
 }
 
 void my__free(void *x){
  size_t in = system_get_free_heap_size();
  os_free(x);
- dbg_printf ("free: in %u, out %u\n", in, system_get_free_heap_size());
+ dbg_printf ("free: in %u, out %lu\n", in, system_get_free_heap_size());
  return;
 }
 
