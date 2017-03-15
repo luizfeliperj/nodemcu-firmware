@@ -222,7 +222,7 @@ static int esp8266_Open( sqlite3_vfs * vfs, const char * path, sqlite3_file * fi
 	if( flags&SQLITE_OPEN_READONLY )  mode = "r";
 	if( flags&SQLITE_OPEN_READWRITE || flags&SQLITE_OPEN_MAIN_JOURNAL ) {
 		int result;
-		if (SQLITE_OK != esp8266_Access(NULL, path, flags, &result))
+		if (SQLITE_OK != esp8266_Access(vfs, path, flags, &result))
 			return SQLITE_CANTOPEN;
 
 		if (result == 1)

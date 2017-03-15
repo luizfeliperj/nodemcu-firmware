@@ -26,6 +26,8 @@
 * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                *
 ************************************************************************/
 #define LSQLITE_VERSION "0.9.4"
+#define LSQLITE_OMIT_UPDATE_HOOK 1
+#define SQLITE_OMIT_PROGRESS_CALLBACK 1
 
 #include <c_stdlib.h>
 #include <c_string.h>
@@ -59,8 +61,6 @@
 #include "sqlite3.h"
 
 /* compile time features */
-#define SQLITE_OMIT_PROGRESS_CALLBACK 1
-#define LSQLITE_OMIT_UPDATE_HOOK 1
 #if !defined(SQLITE_OMIT_PROGRESS_CALLBACK)
     #define SQLITE_OMIT_PROGRESS_CALLBACK 0
 #endif
