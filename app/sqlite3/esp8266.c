@@ -331,7 +331,7 @@ static int esp8266_Read(sqlite3_file *id, void *buffer, int amount, sqlite3_int6
 	ofst = vfs_lseek(file->fd, iofst, VFS_SEEK_SET);
 	if (ofst != iofst) {
 	        dbg_printf("esp8266_Read: 2r %ld != %ld FAIL\n", ofst, iofst);
-		return SQLITE_IOERR_SEEK;
+		return SQLITE_IOERR_SHORT_READ /* SQLITE_IOERR_SEEK */;
 	}
 
 	nRead = vfs_read(file->fd, buffer, amount);
@@ -409,7 +409,10 @@ static int esp8266_Sync(sqlite3_file *id, int flags)
 
 static int esp8266_Access( sqlite3_vfs * vfs, const char * path, int flags, int * result )
 {
-	*result = (vfs_stat(path)!=NULL);
+	vfs_item *item = vfs_stat(path);
+	*result = (item!=NULL);
+	if (item) vfs_closeitem(item);
+
 	dbg_printf("esp8266_Access: %d\n", *result);
 	return SQLITE_OK;
 }
