@@ -8,7 +8,7 @@
 /* #undef HAVE_FDATASYNC */
 
 /* Define to 1 if you have the `gmtime_r' function. */
-/* #undef HAVE_GMTIME_R */
+#define HAVE_GMTIME_R 1
 
 /* Define to 1 if the system has the type `int16_t'. */
 #define HAVE_INT16_T 1
@@ -17,19 +17,19 @@
 #define HAVE_INT32_T 1
 
 /* Define to 1 if the system has the type `int64_t'. */
-#undef HAVE_INT64_T 
+/* #undef HAVE_INT64_T */
 
 /* Define to 1 if the system has the type `int8_t'. */
 #define HAVE_INT8_T 1
 
 /* Define to 1 if the system has the type `intptr_t'. */
-#define HAVE_INTPTR_T 1
+/* #undef HAVE_INTPTR_T */
 
 /* Define to 1 if you have the <inttypes.h> header file. */
-#undef HAVE_INTTYPES_H
+#define HAVE_INTTYPES_H 1
 
 /* Define to 1 if you have the `isnan' function. */
-/* #undef HAVE_ISNAN */
+#define HAVE_ISNAN 1
 
 /* Define to 1 if you have the `localtime_r' function. */
 /* #undef HAVE_LOCALTIME_R */
@@ -47,16 +47,16 @@
 #define HAVE_MEMORY_H 1
 
 /* Define to 1 if you have the pread() function. */
-/* #undef HAVE_PREAD */
+#define HAVE_PREAD 1
 
 /* Define to 1 if you have the pread64() function. */
-/* #undef HAVE_PREAD64 */
+#define HAVE_PREAD64 1
 
 /* Define to 1 if you have the pwrite() function. */
-/* #undef HAVE_PWRITE */
+#define HAVE_PWRITE 1
 
 /* Define to 1 if you have the pwrite64() function. */
-/* #undef HAVE_PWRITE64 */
+#define HAVE_PWRITE64 1
 
 /* Define to 1 if you have the <stdint.h> header file. */
 #define HAVE_STDINT_H 1
@@ -65,7 +65,7 @@
 #define HAVE_STDLIB_H 1
 
 /* Define to 1 if you have the strchrnul() function */
-/* #undef HAVE_STRCHRNUL */
+#define HAVE_STRCHRNUL 1
 
 /* Define to 1 if you have the <strings.h> header file. */
 #define HAVE_STRINGS_H 1
@@ -80,28 +80,28 @@
 #define HAVE_SYS_TYPES_H 1
 
 /* Define to 1 if the system has the type `uint16_t'. */
-/* #undef HAVE_UINT16_T */
+#define HAVE_UINT16_T 1
 
 /* Define to 1 if the system has the type `uint32_t'. */
-/* #undef HAVE_UINT32_T */
+#define HAVE_UINT32_T 1
 
 /* Define to 1 if the system has the type `uint64_t'. */
 /* #undef HAVE_UINT64_T */
 
 /* Define to 1 if the system has the type `uint8_t'. */
-/* #undef HAVE_UINT8_T */
+#define HAVE_UINT8_T 1
 
 /* Define to 1 if the system has the type `uintptr_t'. */
 /* #undef HAVE_UINTPTR_T */
 
 /* Define to 1 if you have the <unistd.h> header file. */
-/* #undef HAVE_UNISTD_H */
+#define HAVE_UNISTD_H 1
 
 /* Define to 1 if you have the `usleep' function. */
-/* #undef HAVE_USLEEP */
+#define HAVE_USLEEP 1
 
 /* Define to 1 if you have the utime() library function. */
-/* #undef HAVE_UTIME */
+#define HAVE_UTIME 1
 
 /* Define to the sub-directory in which libtool stores uninstalled libraries.
    */
@@ -114,13 +114,13 @@
 #define PACKAGE_NAME "sqlite"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "sqlite 3.15.1"
+#define PACKAGE_STRING "sqlite 3.17.0"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "sqlite"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "3.15.1"
+#define PACKAGE_VERSION "3.17.0"
 
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1
