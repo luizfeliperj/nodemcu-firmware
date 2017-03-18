@@ -24,7 +24,7 @@
 #define ESP8266_DEFAULT_MAXNAMESIZE 32
 
 static int esp8266_Close(sqlite3_file*);
-static int esp8266_Lock(sqlite3_file *id, int);
+static int esp8266_Lock(sqlite3_file *, int);
 static int esp8266_Unlock(sqlite3_file*, int);
 static int esp8266_Sync(sqlite3_file*, int);
 static int esp8266_Open(sqlite3_vfs*, const char *, sqlite3_file *, int, int*);
@@ -112,6 +112,23 @@ static const sqlite3_io_methods esp8266IoMethods = {
   esp8266_FileControl,
   esp8266_SectorSize,
   esp8266_DeviceCharacteristics
+};
+
+static int esp8266_ReturnAlwaysOK(sqlite3_vfs *vfs)               { return SQLITE_OK; };
+static const sqlite3_io_methods esp8266OkMethods = {
+  1,    // iVersion
+  ( int (*) ( sqlite3_file* ) )                                  esp8266_ReturnAlwaysOK,
+  ( int (*) ( sqlite3_file*, void*, int, sqlite3_int64 ) )       esp8266_ReturnAlwaysOK,
+  ( int (*) ( sqlite3_file*, const void*, int, sqlite3_int64 ) ) esp8266_ReturnAlwaysOK,
+  ( int (*) ( sqlite3_file*, sqlite3_int64 ) )                   esp8266_ReturnAlwaysOK,
+  ( int (*) ( sqlite3_file*, int ) )                             esp8266_ReturnAlwaysOK,
+  ( int (*) ( sqlite3_file*, sqlite3_int64* ) )                  esp8266_ReturnAlwaysOK,
+  ( int (*) ( sqlite3_file*, int ) )                             esp8266_ReturnAlwaysOK,
+  ( int (*) ( sqlite3_file*, int ) )                             esp8266_ReturnAlwaysOK,
+  ( int (*) ( sqlite3_file*, int* ) )                            esp8266_ReturnAlwaysOK,
+  ( int (*) ( sqlite3_file*, int, void* ) )                      esp8266_ReturnAlwaysOK,
+  ( int (*) ( sqlite3_file* ) )                                  esp8266_ReturnAlwaysOK,
+  ( int (*) ( sqlite3_file* ) )                                  esp8266_ReturnAlwaysOK,
 };
 
 #ifdef CACHE_JOURNAL
@@ -236,6 +253,11 @@ static int esp8266_Open( sqlite3_vfs * vfs, const char * path, sqlite3_file * fi
 
         strncpy (p->name, path, ESP8266_DEFAULT_MAXNAMESIZE);
 	p->name[ESP8266_DEFAULT_MAXNAMESIZE-1] = '\0';
+
+	if( flags&SQLITE_OPEN_MEMORY || !strcmp ( p->name, ":memory:" ) ) {
+		p->base.pMethods = &esp8266OkMethods;
+		return SQLITE_OK;
+	}
 
 #ifdef CACHE_JOURNAL
 	p->writecache = NULL;
@@ -392,7 +414,7 @@ static int esp8266_Delete( sqlite3_vfs * vfs, const char * path, int syncDir )
 static int esp8266_FileSize(sqlite3_file *id, sqlite3_int64 *size)
 {
 	esp8266_file *file = (esp8266_file*) id;
-	*size = 0LL | vfs_size(file->fd);
+	*size = 0LL | vfs_size( file->fd );
 	dbg_printf("esp8266_FileSize: %s %u[%lld]\n", file->name, vfs_size(file->fd), *size);
 	return SQLITE_OK;
 }
@@ -401,7 +423,7 @@ static int esp8266_Sync(sqlite3_file *id, int flags)
 {
 	esp8266_file *file = (esp8266_file*) id;
 
-	int rc = vfs_flush(file->fd);
+	int rc = vfs_flush( file->fd );
 	dbg_printf("esp8266_Sync: %d\n", rc);
 
 	return rc ? SQLITE_IOERR_FSYNC : SQLITE_OK;
@@ -409,9 +431,9 @@ static int esp8266_Sync(sqlite3_file *id, int flags)
 
 static int esp8266_Access( sqlite3_vfs * vfs, const char * path, int flags, int * result )
 {
-	vfs_item *item = vfs_stat(path);
-	*result = (item!=NULL);
-	if (item) vfs_closeitem(item);
+	vfs_item *item = vfs_stat( path );
+	*result = ( item != NULL );
+	if (item) vfs_closeitem( item );
 
 	dbg_printf("esp8266_Access: %d\n", *result);
 	return SQLITE_OK;
@@ -419,7 +441,15 @@ static int esp8266_Access( sqlite3_vfs * vfs, const char * path, int flags, int 
 
 static int esp8266_FullPathname( sqlite3_vfs * vfs, const char * path, int len, char * fullpath )
 {
-	strncpy( fullpath, path, len );
+	vfs_item *item = vfs_stat( path );
+	if ( item ){
+		const char *item_name = vfs_item_name( item );
+		strncpy( fullpath, item_name, len );
+		vfs_closeitem(item);
+	} else {
+		strncpy( fullpath, path, len );
+	}
+
 	fullpath[ len - 1 ] = '\0';
 
 	dbg_printf("esp8266_FullPathname: %s\n", fullpath);
