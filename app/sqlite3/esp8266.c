@@ -114,23 +114,6 @@ static const sqlite3_io_methods esp8266IoMethods = {
   esp8266_DeviceCharacteristics
 };
 
-static int esp8266_ReturnAlwaysOK(sqlite3_vfs *vfs)               { return SQLITE_OK; };
-static const sqlite3_io_methods esp8266OkMethods = {
-  1,    // iVersion
-  ( int (*) ( sqlite3_file* ) )                                  esp8266_ReturnAlwaysOK,
-  ( int (*) ( sqlite3_file*, void*, int, sqlite3_int64 ) )       esp8266_ReturnAlwaysOK,
-  ( int (*) ( sqlite3_file*, const void*, int, sqlite3_int64 ) ) esp8266_ReturnAlwaysOK,
-  ( int (*) ( sqlite3_file*, sqlite3_int64 ) )                   esp8266_ReturnAlwaysOK,
-  ( int (*) ( sqlite3_file*, int ) )                             esp8266_ReturnAlwaysOK,
-  ( int (*) ( sqlite3_file*, sqlite3_int64* ) )                  esp8266_ReturnAlwaysOK,
-  ( int (*) ( sqlite3_file*, int ) )                             esp8266_ReturnAlwaysOK,
-  ( int (*) ( sqlite3_file*, int ) )                             esp8266_ReturnAlwaysOK,
-  ( int (*) ( sqlite3_file*, int* ) )                            esp8266_ReturnAlwaysOK,
-  ( int (*) ( sqlite3_file*, int, void* ) )                      esp8266_ReturnAlwaysOK,
-  ( int (*) ( sqlite3_file* ) )                                  esp8266_ReturnAlwaysOK,
-  ( int (*) ( sqlite3_file* ) )                                  esp8266_ReturnAlwaysOK,
-};
-
 #ifdef CACHE_JOURNAL
 static const sqlite3_io_methods esp8266MemMethods = {
   1,    // iVersion
@@ -253,11 +236,6 @@ static int esp8266_Open( sqlite3_vfs * vfs, const char * path, sqlite3_file * fi
 
         strncpy (p->name, path, ESP8266_DEFAULT_MAXNAMESIZE);
 	p->name[ESP8266_DEFAULT_MAXNAMESIZE-1] = '\0';
-
-	if( flags&SQLITE_OPEN_MEMORY || !strcmp ( p->name, ":memory:" ) ) {
-		p->base.pMethods = &esp8266OkMethods;
-		return SQLITE_OK;
-	}
 
 #ifdef CACHE_JOURNAL
 	p->writecache = NULL;
