@@ -1,7 +1,7 @@
 CC=/usr/bin/gcc
 OBJS:=$(shell /bin/ls *.c | /bin/sed -e 's,shell.c ,,' -e 's,\.c,\.o,' -e 's,.*,\.obj/\0,' )
 CFLAGS=-m32 -O2 -I. -DFS_OBJ_NAME_LEN=PATH_MAX -Ddbg_printf=printf '-Dsint32_t=signed long int'
-STD_CFLAGS=-std=gnu11 -Wimplicit -Wno-undef -I../platform # -DENABLE_LOCAL_MEMDEBUG # -DCACHE_JOURNAL
+STD_CFLAGS=-std=gnu11 -Wimplicit -Wno-undef -I. -D_GNU_SOURCE -DENABLE_LOCAL_MEMDEBUG # -DCACHE_JOURNAL
 STD_CFLAGS+= -DUINTPTR_TYPE='unsigned int'
 STD_CFLAGS+= -DSQLITE_CORE=1
 STD_CFLAGS+= -DSQLITE_NO_SYNC=1

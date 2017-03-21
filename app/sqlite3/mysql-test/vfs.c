@@ -94,7 +94,7 @@ vfs_item *vfs_stat( const char *name ) {
   static struct stat st;
 
   if (!stat (name, &st))
-    return (vfs_item*) &st;
+    return (vfs_item*) name;
 
   return (vfs_item*) NULL;
 }
@@ -107,6 +107,6 @@ sint32_t  vfs_remove( const char *name ) {
   return unlink (name);
 }
 
-const char *vfs_item_name( const char *name ) {
-  return name;
+const char *vfs_item_name( const vfs_item *name ) {
+  return (const char *) name;
 }

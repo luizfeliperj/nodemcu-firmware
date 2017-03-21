@@ -52,4 +52,5 @@ int vfs_open( const char *name, const char *mode );
 vfs_item *vfs_stat( const char *name );
 void vfs_closeitem( vfs_item *item );
 sint32_t  vfs_remove( const char *name );
+const char *vfs_item_name( vfs_item *item );
 #endif
