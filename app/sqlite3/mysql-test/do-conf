@@ -1,0 +1,14 @@
+ac_cv_type_intptr_t=no \
+ac_cv_type_uintptr_t=no \
+ac_cv_func_fdatasync=no \
+ac_cv_func_localtime_r=no \
+ac_cv_func_malloc_usable_size=no \
+	./configure \
+		--disable-load-extension \
+		--disable-readline \
+		--disable-tcl \
+		--disable-threadsafe \
+		--disable-largefile \
+		--without-tcl \
+		--enable-static \
+		--disable-shared
