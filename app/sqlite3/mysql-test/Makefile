@@ -83,18 +83,20 @@ STD_CFLAGS+= -DSQLITE_OMIT_XFER_OPT=1
 #STD_CFLAGS+= -DSQLITE_OMIT_DATETIME_FUNCS=1
 #STD_CFLAGS+= -DSQLITE_OMIT_FLOATING_POINT=1
 
-.PHONY: all clean
+.PHONY: all clean test
 
-all: sqlite3
+all:
+
+test: sqlite3
+
+clean:
+	/bin/rm -rf .obj .lib sqlite3
 
 sqlite3: .obj/shell.o .lib/libsqlite3.a
-	$(CC) $(CFLAGS) -o $@ $^ -lm
+	$(CC) $(CFLAGS) -o $@ $^ -Wl,-defsym=sqlite3_get_table=getpid -Wl,-defsym=sqlite3_free_table=getpid -lm
 
 .lib/libsqlite3.a: $(OBJS)
 	/bin/mkdir -p .lib && /usr/bin/ar ruv .lib/libsqlite3.a $(OBJS)
 
 .obj/%.o: %.c 
 	/bin/mkdir -p .obj && $(CC) $(CFLAGS) $(STD_CFLAGS) -c -o $@ $<
-
-clean:
-	/bin/rm -rf .obj .lib sqlite3

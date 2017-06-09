@@ -17,7 +17,7 @@
 #define HAVE_INT32_T 1
 
 /* Define to 1 if the system has the type `int64_t'. */
-/* #undef HAVE_INT64_T */
+#define HAVE_INT64_T 1
 
 /* Define to 1 if the system has the type `int8_t'. */
 #define HAVE_INT8_T 1
@@ -86,7 +86,7 @@
 #define HAVE_UINT32_T 1
 
 /* Define to 1 if the system has the type `uint64_t'. */
-/* #undef HAVE_UINT64_T */
+#define HAVE_UINT64_T 1
 
 /* Define to 1 if the system has the type `uint8_t'. */
 #define HAVE_UINT8_T 1
@@ -114,13 +114,13 @@
 #define PACKAGE_NAME "sqlite"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "sqlite 3.17.0"
+#define PACKAGE_STRING "sqlite 3.19.3"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "sqlite"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "3.17.0"
+#define PACKAGE_VERSION "3.19.3"
 
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1
