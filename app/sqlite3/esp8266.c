@@ -409,9 +409,9 @@ static int esp8266_Sync(sqlite3_file *id, int flags)
 
 static int esp8266_Access( sqlite3_vfs * vfs, const char * path, int flags, int * result )
 {
-	vfs_item *item = vfs_stat( path );
-	*result = ( item != NULL );
-	if (item) vfs_closeitem( item );
+	struct vfs_stat st;
+	sint32_t rc = vfs_stat( path, &st );
+	*result = ( rc != VFS_RES_ERR );
 
 	dbg_printf("esp8266_Access: %d\n", *result);
 	return SQLITE_OK;
@@ -419,11 +419,10 @@ static int esp8266_Access( sqlite3_vfs * vfs, const char * path, int flags, int 
 
 static int esp8266_FullPathname( sqlite3_vfs * vfs, const char * path, int len, char * fullpath )
 {
-	vfs_item *item = vfs_stat( path );
-	if ( item ){
-		const char *item_name = vfs_item_name( item );
-		strncpy( fullpath, item_name, len );
-		vfs_closeitem(item);
+	struct vfs_stat st;
+	sint32_t rc = vfs_stat( path, &st );
+	if ( rc == VFS_RES_OK ){
+		strncpy( fullpath, st.name, len );
 	} else {
 		strncpy( fullpath, path, len );
 	}
