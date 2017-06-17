@@ -1,9 +1,10 @@
-#include <vfs.h>
 #include <stdio.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <errno.h>
 #include <stdlib.h>
+#include <linux/limits.h>
+#include <vfs.h>
 
 sint32_t vfs_close( int fd ) {
   int rc;
@@ -90,23 +91,30 @@ int vfs_open( const char *name, const char *mode ) {
   return (int)fp;
 }
 
-vfs_item *vfs_stat( const char *name ) {
-  static struct stat st;
+sint32_t vfs_stat( const char *name, struct vfs_stat *buf ) {
+  struct stat st;
 
-  if (!stat (name, &st))
-    return (vfs_item*) name;
+  if (stat (name, &st))
+    return VFS_RES_ERR;
 
-  return (vfs_item*) NULL;
-}
+  buf->size = st.st_size;
+  strncpy (buf->name, name, FS_OBJ_NAME_LEN+1);
+  buf->tm.year = 1990;
+  buf->tm.mon = 1;
+  buf->tm.day = 1;
+  buf->tm.hour = 0;
+  buf->tm.min = 0;
+  buf->tm.sec = 0;
+  buf->is_dir = S_ISDIR(st.st_mode);
+  buf->tm_valid = 1;
+  buf->is_rdonly = 0;
+  buf->is_hidden = 0;
+  buf->is_sys = 0;
+  buf->is_arch = 0;
 
-void vfs_closeitem( vfs_item *di ){
-  return;
+  return VFS_RES_OK;
 }
 
 sint32_t  vfs_remove( const char *name ) {
   return unlink (name);
-}
-
-const char *vfs_item_name( const vfs_item *name ) {
-  return (const char *) name;
 }
