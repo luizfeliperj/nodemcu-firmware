@@ -1,3 +1,4 @@
+#include <c_stdio.h>
 #include <c_stdlib.h>
 #include <c_string.h>
 #include <c_stdint.h>
@@ -5,8 +6,13 @@
 #include <caching.h>
 
 static uint32_t linkedlist_store (linkedlist_t **leaf, uint32_t offset, uint32_t len, const uint8_t *data) {
+	int i;
 	uint16_t blockid = offset/CACHEBLOCKSZ;
 	linkedlist_t *block;
+
+	for (i = 0; data[i] == 0 && i < len; i++);
+	if ( i == len)
+		return len;
 
 	block = *leaf;
 	if (!block || ( block->blockid != blockid ) ) {
@@ -14,7 +20,7 @@ static uint32_t linkedlist_store (linkedlist_t **leaf, uint32_t offset, uint32_t
 		if (!block)
 			return SQLITE_NOMEM;
 
-		memset (block->data, ' ', CACHEBLOCKSZ);
+		memset (block->data, 0, CACHEBLOCKSZ);
 		block->blockid = blockid;
 	}
 
