@@ -117,10 +117,8 @@ static int esp8266mem_Close(sqlite3_file *id)
 {
 	esp8266_file *file = (esp8266_file*) id;
 
-	if (file->cache) {
-		filecache_free(file->cache);
-		sqlite3_free (file->cache);
-	}
+	filecache_free(file->cache);
+	sqlite3_free (file->cache);
 
 	dbg_printf("esp8266mem_Close: %s OK\n", file->name);
 	return SQLITE_OK;
@@ -193,13 +191,13 @@ static int esp8266_Open( sqlite3_vfs * vfs, const char * path, sqlite3_file * fi
         strncpy (p->name, path, ESP8266_DEFAULT_MAXNAMESIZE);
 	p->name[ESP8266_DEFAULT_MAXNAMESIZE-1] = '\0';
 
-	p->cache = sqlite3_malloc(sizeof (filecache_t));
-	if (! p->cache )
-		return SQLITE_NOMEM;
-	memset (p->cache, 0, sizeof(filecache_t));
-
 	if( flags&SQLITE_OPEN_MAIN_JOURNAL ) {
 		p->fd = 0;
+		p->cache = sqlite3_malloc(sizeof (filecache_t));
+		if (! p->cache )
+			return SQLITE_NOMEM;
+		memset (p->cache, 0, sizeof(filecache_t));
+
 		p->base.pMethods = &esp8266MemMethods;
 		dbg_printf("esp8266_Open: 2o %s %d MEM OK\n", p->name, p->fd);
 		return SQLITE_OK;
@@ -218,11 +216,6 @@ static int esp8266_Open( sqlite3_vfs * vfs, const char * path, sqlite3_file * fi
 static int esp8266_Close(sqlite3_file *id)
 {
 	esp8266_file *file = (esp8266_file*) id;
-
-	if (file->cache) {
-		filecache_free(file->cache);
-		sqlite3_free (file->cache);
-	}
 
 	int rc = vfs_close(file->fd);
 	dbg_printf("esp8266_Close: %s %d %d\n", file->name, file->fd, rc);

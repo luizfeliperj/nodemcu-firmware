@@ -1,4 +1,3 @@
-#include <c_stdio.h>
 #include <c_stdlib.h>
 #include <c_string.h>
 #include <c_stdint.h>
@@ -6,12 +5,11 @@
 #include <caching.h>
 
 static uint32_t linkedlist_store (linkedlist_t **leaf, uint32_t offset, uint32_t len, const uint8_t *data) {
-	int i;
+	const uint8_t blank[CACHEBLOCKSZ] = { 0 };
 	uint16_t blockid = offset/CACHEBLOCKSZ;
 	linkedlist_t *block;
 
-	for (i = 0; data[i] == 0 && i < len; i++);
-	if ( i == len)
+	if (!memcmp(data, blank, CACHEBLOCKSZ))
 		return len;
 
 	block = *leaf;
@@ -25,8 +23,8 @@ static uint32_t linkedlist_store (linkedlist_t **leaf, uint32_t offset, uint32_t
 	}
 
 	if (!*leaf) {
-		block->next = NULL;
 		*leaf = block;
+		block->next = NULL;
 	} else if (block != *leaf) {
 		if (block->blockid > (*leaf)->blockid) {
 			block->next = (*leaf)->next;

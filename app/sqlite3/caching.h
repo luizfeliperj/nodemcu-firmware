@@ -1,7 +1,6 @@
 #ifndef _CACHING_H
 #define _CACHING_H
 #define CACHEBLOCKSZ 64
-#define MALLOCERROR -1
 
 typedef struct st_linkedlist {
         uint16_t blockid;
