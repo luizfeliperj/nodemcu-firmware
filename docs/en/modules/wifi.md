@@ -389,6 +389,9 @@ none
 
 Sets the WiFi station configuration.
 
+!!! note
+	It is not advised to assume that the WiFi is connected at any time during initialization start-up. WiFi connection status should be validated either by using a WiFi event callback or by polling the status on a timer.
+
 #### Syntax
 `wifi.sta.config(station_config)`
 
@@ -408,7 +411,30 @@ Sets the WiFi station configuration.
 			- "DE AD BE EF 7A C0"
 	- `save` Save station configuration to flash. 
 		- `true` configuration **will** be retained through power cycle. 
-		- `false` configuration **will not** be retained through power cycle. (Default)
+		- `false` configuration **will not** be retained through power cycle. (Default).
+	- Event callbacks will only be available if `WIFI_SDK_EVENT_MONITOR_ENABLE` is uncommented in `user_config.h`
+		- Please note: To ensure all station events are handled at boot time, all relevant callbacks must be registered as early as possible in `init.lua` with either `wifi.sta.config()` or `wifi.eventmon.register()`.     
+		- `connected_cb`: Callback to execute when station is connected to an access point. (Optional)
+			- Items returned in table :
+				- `SSID`: SSID of access point.  (format: string)
+				- `BSSID`: BSSID of access point.  (format: string)
+				- `channel`: The channel the access point is on.  (format: number)
+		- `disconnected_cb`: Callback to execute when station is disconnected from an access point. (Optional)
+			- Items returned in table :
+				- `SSID`: SSID of access point.   (format: string)
+				- `BSSID`: BSSID of access point. (format: string) 
+				- `REASON`: See [wifi.eventmon.reason](#wifieventmonreason) below. (format: number)  
+		- `authmode_change_cb`: Callback to execute when the access point has changed authorization mode. (Optional)    
+			- Items returned in table :
+			- `old_auth_mode`: Old wifi authorization mode. (format: number)  
+			- `new_auth_mode`: New wifi authorization mode. (format: number)
+		- `got_ip_cb`: Callback to execute when the station received an IP address from the access point. (Optional)
+			- Items returned in table :
+				- `IP`: The IP address assigned to the station.  (format: string)
+				- `netmask`: Subnet mask.  (format: string)
+				- `gateway`: The IP address of the access point the station is connected to. (format: string)  
+		- `dhcp_timeout_cb`: Station DHCP request has timed out. (Optional)
+			- Blank table is returned.  
 
 #### Returns
 - `true`  Success
@@ -457,10 +483,14 @@ wifi.sta.config(station_cfg)
 Connects to the configured AP in station mode. You only ever need to call this if auto-connect was disabled in [`wifi.sta.config()`](#wifistaconfig).
 
 #### Syntax
-`wifi.sta.connect()`
+`wifi.sta.connect([connected_cb])`
 
 #### Parameters
-none
+- `connected_cb`: Callback to execute when station is connected to an access point. (Optional)
+	- Items returned in table :
+		- `SSID`: SSID of access point.  (format: string)
+		- `BSSID`: BSSID of access point.  (format: string)
+		- `channel`: The channel the access point is on.  (format: number)
 
 #### Returns
 `nil`
@@ -477,10 +507,14 @@ Disconnects from AP in station mode.
 	Please note that disconnecting from Access Point does not reduce power consumption. If power saving is your goal, please refer to the description for `wifi.NULLMODE` in the function [`wifi.setmode()`](#wifisetmode) for more details.
 
 #### Syntax
-`wifi.sta.disconnect()`
+`wifi.sta.disconnect([disconnected_cb])`
 
 #### Parameters
-none
+- `disconnected_cb`: Callback to execute when station is disconnected from an access point. (Optional)
+	- Items returned in table :
+		- `SSID`: SSID of access point.   (format: string)
+		- `BSSID`: BSSID of access point. (format: string) 
+		- `REASON`: See [wifi.eventmon.reason](#wifieventmonreason) below. (format: number)  
 
 #### Returns
 `nil`
@@ -488,116 +522,6 @@ none
 #### See also
 - [`wifi.sta.config()`](#wifistaconfig)
 - [`wifi.sta.connect()`](#wifistaconnect)
-
-## wifi.sta.eventMonReg()
-
-Registers callbacks for WiFi station status events.
-
-!!! note
-    Please update your program to use the [`wifi.eventmon`](#wifieventmon-module) API, as the `wifi.sta.eventmon___()` API is deprecated. 
-
-####  Syntax
-- `wifi.sta.eventMonReg(wifi_status[, function([previous_state])])`
-
-####  Parameters
-- `wifi_status` WiFi status you would like to set a callback for:
-    - `wifi.STA_IDLE`
-    - `wifi.STA_CONNECTING`
-    - `wifi.STA_WRONGPWD`
-    - `wifi.STA_APNOTFOUND`
-    - `wifi.STA_FAIL`
-    - `wifi.STA_GOTIP`
-- `function` callback function to perform when event occurs
-	- Note: leaving field blank unregisters callback.
-- `previous_state` previous wifi_state(0 - 5)
-
-####  Returns
-`nil`
-
-####  Example
-```lua
---register callback
-wifi.sta.eventMonReg(wifi.STA_IDLE, function() print("STATION_IDLE") end)
-wifi.sta.eventMonReg(wifi.STA_CONNECTING, function() print("STATION_CONNECTING") end)
-wifi.sta.eventMonReg(wifi.STA_WRONGPWD, function() print("STATION_WRONG_PASSWORD") end)
-wifi.sta.eventMonReg(wifi.STA_APNOTFOUND, function() print("STATION_NO_AP_FOUND") end)
-wifi.sta.eventMonReg(wifi.STA_FAIL, function() print("STATION_CONNECT_FAIL") end)
-wifi.sta.eventMonReg(wifi.STA_GOTIP, function() print("STATION_GOT_IP") end)
-
---register callback: use previous state
-wifi.sta.eventMonReg(wifi.STA_CONNECTING, function(previous_State)
-	if(previous_State==wifi.STA_GOTIP) then
-		print("Station lost connection with access point\n\tAttempting to reconnect...")
-	else
-		print("STATION_CONNECTING")
-	end
-end)
-
---unregister callback
-wifi.sta.eventMonReg(wifi.STA_IDLE)
-```
-#### See also
-- [`wifi.sta.eventMonStart()`](#wifistaeventmonstart)
-- [`wifi.sta.eventMonStop()`](#wifistaeventmonstop)
-- [`wifi.eventmon.register()`](#wifieventmonregister)
-- [`wifi.eventmon.unregister()`](#wifieventmonunregister)
-
-
-## wifi.sta.eventMonStart()
-
-Starts WiFi station event monitor.
-
-####  Syntax
-`wifi.sta.eventMonStart([ms])`
-
-### Parameters
-- `ms` interval between checks in milliseconds, defaults to 150ms if not provided.
-
-####  Returns
-`nil`
-
-####  Example
-```lua
---start WiFi event monitor with default interval
-wifi.sta.eventMonStart()
-
---start WiFi event monitor with 100ms interval
-wifi.sta.eventMonStart(100)
-```
-
-#### See also
-- [`wifi.sta.eventMonReg()`](#wifistaeventmonreg)
-- [`wifi.sta.eventMonStop()`](#wifistaeventmonstop)
-- [`wifi.eventmon.register()`](#wifieventmonregister)
-- [`wifi.eventmon.unregister()`](#wifieventmonunregister)
-
-## wifi.sta.eventMonStop()
-
-Stops WiFi station event monitor.
-####  Syntax
-`wifi.sta.eventMonStop([unregister_all])`
-
-####  Parameters
-- `unregister_all` enter 1 to unregister all previously registered functions.
-	- Note: leave blank to leave callbacks registered
-
-####  Returns
-`nil`
-
-####  Example
-```lua
---stop WiFi event monitor
-wifi.sta.eventMonStop()
-
---stop WiFi event monitor and unregister all callbacks
-wifi.sta.eventMonStop(1)
-```
-
-#### See also
-- [`wifi.sta.eventMonReg()`](#wifistaeventmonreg)
-- [`wifi.sta.eventMonStart()`](#wifistaeventmonstart)
-- [`wifi.eventmon.register()`](#wifieventmonregister)
-- [`wifi.eventmon.unregister()`](#wifieventmonunregister)
 
 ## wifi.sta.getap()
 
@@ -981,7 +905,7 @@ Set Maximum number of Access Points to store in flash.
 `wifi.sta.setaplimit(qty)`
 
 #### Parameters
-`qty` Quantity of Access Points to store in flash. Range: 1-5 (Default: 5)
+`qty` Quantity of Access Points to store in flash. Range: 1-5 (Default: 1)
 
 #### Returns
 - `true`  Success
@@ -1121,7 +1045,20 @@ Sets SSID and password in AP mode. Be sure to make the password at least 8 chara
 	- `save` save configuration to flash.
 		- `true` configuration **will** be retained through power cycle. (Default)
 		- `false` configuration **will not** be retained through power cycle.
- 
+	- Event callbacks will only be available if `WIFI_SDK_EVENT_MONITOR_ENABLE` is uncommented in `user_config.h`
+		- Please note: To ensure all SoftAP events are handled at boot time, all relevant callbacks must be registered as early as possible in `init.lua` with either `wifi.ap.config()` or `wifi.eventmon.register()`.     
+ 		- `staconnected_cb`: Callback executed when a new client has connected to the access point. (Optional)
+			- Items returned in table :
+				- `MAC`: MAC address of client that has connected.  
+				- `AID`: SDK provides no details concerning this return value.  
+		- `stadisconnected_cb`: Callback executed when a client has disconnected from the access point. (Optional)  
+			- Items returned in table :
+				- `MAC`: MAC address of client that has disconnected.  
+				- `AID`: SDK provides no details concerning this return value.  
+		- `probereq_cb`: Callback executed when a probe request was received. (Optional)
+			- Items returned in table :
+				- `MAC`: MAC address of the client that is probing the access point.  
+				- `RSSI`: Received Signal Strength Indicator of client.  
 
 #### Returns
 - `true`  Success
@@ -1464,7 +1401,6 @@ none
 boolean indicating success
 
 # wifi.eventmon Module
-Note: The functions `wifi.sta.eventMon___()` and `wifi.eventmon.___()` are completely seperate and can be used independently of one another.
 
 ## wifi.eventmon.register()
 
@@ -1573,9 +1509,6 @@ T: Table returned by event.
 ```
 #### See also
 - [`wifi.eventmon.unregister()`](#wifieventmonunregister)
-- [`wifi.sta.eventMonStart()`](#wifistaeventmonstart)
-- [`wifi.sta.eventMonStop()`](#wifistaeventmonstop)
-- [`wifi.sta.eventMonReg()`](#wifistaeventmonreg)
 
 ## wifi.eventmon.unregister()
 
@@ -1608,8 +1541,6 @@ Event: WiFi event you would like to set a callback for.
 ```
 #### See also
 - [`wifi.eventmon.register()`](#wifieventmonregister)
-- [`wifi.sta.eventMonStart()`](#wifistaeventmonstart)
-- [`wifi.sta.eventMonStop()`](#wifistaeventmonstop)
 
 ## wifi.eventmon.reason
 

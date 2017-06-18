@@ -131,7 +131,7 @@ static const char *sqlite_bu_meta   = ":sqlite3:bu";
 static const char *sqlite_ctx_meta  = ":sqlite3:ctx";
 static int sqlite_ctx_meta_ref;
 
-/* Lua 5.3 introduced an integer type, but depending on the implementation, it could be 32 
+/* Lua 5.3 introduced an integer type, but depending on the implementation, it could be 32
 ** or 64 bits (or something else?). This helper macro tries to do "the right thing."
 */
 
@@ -665,7 +665,7 @@ static sdb *newdb (lua_State *L) {
     db->progress_cb =
     db->progress_udata =
     db->trace_cb =
-    db->trace_udata = 
+    db->trace_udata =
 #if !defined(LSQLITE_OMIT_UPDATE_HOOK) || !LSQLITE_OMIT_UPDATE_HOOK
     db->update_hook_cb =
     db->update_hook_udata =
@@ -1368,7 +1368,7 @@ static int db_trace(lua_State *L) {
 ** Params: database, callback function, userdata
 **
 ** callback function:
-** Params: userdata, {one of SQLITE_INSERT, SQLITE_DELETE, or SQLITE_UPDATE}, 
+** Params: userdata, {one of SQLITE_INSERT, SQLITE_DELETE, or SQLITE_UPDATE},
 **          database name, table name (containing the affected row), rowid of the row
 */
 static void db_update_hook_callback(void *user, int op, char const *dbname, char const *tblname, sqlite3_int64 rowid) {
@@ -1383,7 +1383,7 @@ static void db_update_hook_callback(void *user, int op, char const *dbname, char
     lua_pushinteger(L, op);
     lua_pushstring(L, dbname); /* update_hook database name */
     lua_pushstring(L, tblname); /* update_hook database name */
-    
+
     PUSH_INT64(L, rowid, lua_pushfstring(L, "%ll", rowid));
 
     /* call lua function */
@@ -2074,7 +2074,7 @@ static int db_close_vm(lua_State *L) {
 }
 
 /* From: Wolfgang Oertl
-When using lsqlite3 in a multithreaded environment, each thread has a separate Lua 
+When using lsqlite3 in a multithreaded environment, each thread has a separate Lua
 environment, but full userdata structures can't be passed from one thread to another.
 This is possible with lightuserdata, however. See: lsqlite_open_ptr().
 */
@@ -2414,7 +2414,7 @@ static const LUA_REG_TYPE sqlitelib[] = {
     SC(OPEN_FULLMUTEX)
     SC(OPEN_SHAREDCACHE)
     SC(OPEN_PRIVATECACHE)
-    
+
     { LNILKEY, LNILVAL }
 };
 

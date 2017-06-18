@@ -102,7 +102,7 @@ STD_CFLAGS+= -DSQLITE_OMIT_XFER_OPT=1
 #   makefile at its root level - these are then overridden
 #   for a subtree within the makefile rooted therein
 #
-#DEFINES += 
+#DEFINES +=
 
 #############################################################
 # Recursion Magic - Don't touch this!!

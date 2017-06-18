@@ -44,7 +44,7 @@ uint32_t filecache_pull (pFileCache_t cache, uint32_t offset, uint32_t len, uint
 	uint16_t i;
 	float blocks;
 	uint32_t r = 0;
-	
+
 	blocks = ( offset % CACHEBLOCKSZ + len ) / (float) CACHEBLOCKSZ;
 
 	if (blocks == 0.0)

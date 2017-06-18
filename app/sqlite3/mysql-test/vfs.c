@@ -80,7 +80,7 @@ uint32_t vfs_size( int fd ) {
 
   fseek (fp, 0, SEEK_END);
   sz = ftell (fp);
-  
+
   return sz;
 }
 

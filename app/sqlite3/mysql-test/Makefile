@@ -98,5 +98,5 @@ sqlite3: .obj/shell.o .lib/libsqlite3.a
 .lib/libsqlite3.a: $(OBJS)
 	/bin/mkdir -p .lib && /usr/bin/ar ruv .lib/libsqlite3.a $(OBJS)
 
-.obj/%.o: %.c 
+.obj/%.o: %.c
 	/bin/mkdir -p .obj && $(CC) $(CFLAGS) $(STD_CFLAGS) -c -o $@ $<
