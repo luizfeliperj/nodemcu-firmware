@@ -18,8 +18,8 @@
 #include <sqlite3.h>
 #include <caching.h>
 
-// #undef dbg_printf
-// #define dbg_printf(...) 0
+#undef dbg_printf
+#define dbg_printf(...) 0
 #define ESP8266_DEFAULT_MAXNAMESIZE 32
 
 static int esp8266_Close(sqlite3_file*);
